@@ -10,7 +10,7 @@
 ## 导入依赖
 ```xml
 <dependency>
-    <groupId>com.semaphore.resource.updater</groupId>
+    <groupId>com.github.FashionSuperman</groupId>
     <artifactId>resource-updater</artifactId>
     <version>1.0</version>
 </dependency>
