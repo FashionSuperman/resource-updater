@@ -9,6 +9,33 @@
   <version>1.0</version>
 
   <name>resource-updater</name>
+  <description>resource updater use semaphore</description>
+  <url>https://github.com/FashionSuperman/resource-updater</url>
+
+  <scm>
+    <connection>https://github.com/FashionSuperman/resource-updater.git</connection>
+    <url>https://github.com/FashionSuperman/resource-updater</url>
+  </scm>
+
+  <developers>
+    <developer>
+      <name>ActironMan</name>
+      <id>ActironMan</id>
+      <email>zhruixuan@163.com</email>
+      <timezone>+8</timezone>
+      <organization>InsightEverything</organization>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>Apache 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -69,7 +96,7 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>8.0.16</version>
+      <version>8.0.27</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -92,5 +119,99 @@
         <directory>src/test/resources</directory>
       </testResource>
     </testResources>
+    <!---->
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.3</version>
+        <configuration>
+          <mavenExecutorId>forked-path</mavenExecutorId>
+          <useReleaseProfile>false</useReleaseProfile>
+          <arguments>-Psonatype-oss-release</arguments>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.1.0</version>
+        <inherited>true</inherited>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <excludeResources>true</excludeResources>
+          <useDefaultExcludes>true</useDefaultExcludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.0.0</version>
+        <inherited>true</inherited>
+        <executions>
+          <execution>
+            <id>bundle-sources</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <maxmemory>1024</maxmemory>
+          <encoding>UTF-8</encoding>
+          <charset>UTF-8</charset>
+          <show>protected</show>
+          <notree>true</notree>
+          <!-- Avoid running into Java 8's very restrictive doclint issues -->
+          <failOnError>false</failOnError>
+          <doclint>none</doclint>
+          <additionalJOptions>
+            <additionalJOption>-Xdoclint:none</additionalJOption>
+          </additionalJOptions>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
+
+  <distributionManagement>
+    <repository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.0.1</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
