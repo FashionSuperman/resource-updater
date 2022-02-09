@@ -10,7 +10,7 @@
 ## 导入依赖
 ```xml
 <dependency>
-    <groupId>com.github.FashionSuperman</groupId>
+    <groupId>io.github.fashionsuperman</groupId>
     <artifactId>resource-updater</artifactId>
     <version>1.0</version>
 </dependency>
@@ -168,4 +168,5 @@ public class MockBizService {
     }
 }
 ```
+**注意** 业务方法必须开启事务
 
