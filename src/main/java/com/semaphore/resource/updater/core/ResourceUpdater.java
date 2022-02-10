@@ -75,23 +75,23 @@ public class ResourceUpdater {
 
     /**
      * 查询可用资源数量
-     * @param resourceId
+     * @param queryResourceParam
      * @return
      */
-    public Integer queryAvailable(String resourceId){
-        return CacheAccessor.queryAvailable(resourceId);
+    public Integer queryAvailable(QueryResourceParam queryResourceParam){
+        return CacheAccessor.queryAvailable(queryResourceParam.getResourceId(),queryResourceParam.getAcquire());
     }
 
     /**
      * 批量查询可用资源数量
-     * @param resourceIdList
+     * @param queryResourceParamList
      * @return
      */
-    public Map<String,Integer> queryAvailable(List<String> resourceIdList){
+    public Map<String,Integer> queryAvailable(List<QueryResourceParam> queryResourceParamList){
         Map<String,Integer> resultMap = new HashMap<>();
-        for(String resourceId : resourceIdList){
-            Integer num = queryAvailable(resourceId);
-            resultMap.put(resourceId,num);
+        for(QueryResourceParam queryResourceParam : queryResourceParamList){
+            Integer num = queryAvailable(queryResourceParam);
+            resultMap.put(queryResourceParam.getResourceId(),num);
         }
         return resultMap;
     }

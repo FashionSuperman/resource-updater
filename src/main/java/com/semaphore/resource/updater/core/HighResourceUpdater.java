@@ -45,23 +45,23 @@ public class HighResourceUpdater extends ResourceUpdater{
 
     /**
      * 查询预占资源数量
-     * @param resourceId
+     * @param queryResourceParam
      * @return
      */
-    public Integer queryPreLocked(String resourceId){
-        return CacheAccessor.queryPreLocked(resourceId);
+    public Integer queryPreLocked(QueryResourceParam queryResourceParam){
+        return CacheAccessor.queryPreLocked(queryResourceParam.getResourceId(),queryResourceParam.getAcquire());
     }
 
     /**
      * 批量查询预占资源数量
-     * @param resourceIdList
+     * @param queryResourceParamList
      * @return
      */
-    public Map<String,Integer> queryPreLocked(List<String> resourceIdList){
+    public Map<String,Integer> queryPreLocked(List<QueryResourceParam> queryResourceParamList){
         Map<String,Integer> resultMap = new HashMap<>();
-        for(String resourceId : resourceIdList){
-            Integer num = queryPreLocked(resourceId);
-            resultMap.put(resourceId,num);
+        for(QueryResourceParam queryResourceParam : queryResourceParamList){
+            Integer num = queryPreLocked(queryResourceParam);
+            resultMap.put(queryResourceParam.getResourceId(),num);
         }
         return resultMap;
     }

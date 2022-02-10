@@ -115,14 +115,22 @@ public class CacheAccessor {
     /**
      * 查询可用资源数量
      * @param resourceId
+     * @param acquire 需要的数量，用于自动调节一致性，如果缓存数量小于要求数量或者缓存数量为0都有概率进行自调节，可以传空，将不做任何操作
      * @return
      */
-    public static Integer queryAvailable(String resourceId){
+    public static Integer queryAvailable(String resourceId,Integer acquire){
         MySemaphore mySemaphore = getResourceAvailableSemaphore(resourceId);
         if(!mySemaphore.isExists()){
             return null;
         }
-        return mySemaphore.availablePermits();
+        int availablePermit =  mySemaphore.availablePermits();
+        if(Objects.isNull(acquire)){
+            return availablePermit;
+        }
+        if(availablePermit == 0 || availablePermit < acquire){
+            adjustAvailableResource(resourceId);
+        }
+        return availablePermit;
     }
 
     /**
@@ -313,14 +321,22 @@ public class CacheAccessor {
     /**
      * 查询预占资源数量
      * @param resourceId
+     * @param acquire 需要的数量，用于自动调节一致性，如果缓存数量小于要求数量或者缓存数量为0都有概率进行自调节，可以传空，将不做任何操作
      * @return
      */
-    public static Integer queryPreLocked(String resourceId) {
+    public static Integer queryPreLocked(String resourceId,Integer acquire) {
         MySemaphore mySemaphore = getResourcePreLockSemaphore(resourceId);
         if(!mySemaphore.isExists()){
             return null;
         }
-        return mySemaphore.availablePermits();
+        int preLockedPermit = mySemaphore.availablePermits();
+        if(Objects.isNull(acquire)){
+            return preLockedPermit;
+        }
+        if(preLockedPermit == 0 || preLockedPermit < acquire){
+            adjustPreLockedResource(resourceId);
+        }
+        return preLockedPermit;
     }
 
     /**
