@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.semaphore.resource.updater.base.BaseSpringTest;
 import com.semaphore.resource.updater.core.*;
 import com.semaphore.resource.updater.bizService.MockBizService;
-import com.semaphore.resource.updater.exceptions.LockWaitException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -55,11 +54,7 @@ public class TestResourceUpdater extends BaseSpringTest {
         updateResourceParamList.add(param1);
         updateResourceParamList.add(param2);
         updateResourceParamList.add(param3);
-        try {
-            mockBizService.trySubtractResource(new HashSet<>(updateResourceParamList));
-        } catch (Exception e) {
-            System.out.println("失败原因:" + e.getMessage());
-        }
+        doSubtractAvailable(false,updateResourceParamList);
     }
 
     /**
@@ -179,6 +174,10 @@ public class TestResourceUpdater extends BaseSpringTest {
             UpdateResourceParam param = UpdateResourceParam.builder().resourceId(materialCode).num(acquireNum).build();
             updateResourceParamList.add(param);
         }
+        doSubtractAvailable(useMutexLock, updateResourceParamList);
+    }
+
+    private void doSubtractAvailable(boolean useMutexLock, List<UpdateResourceParam> updateResourceParamList) {
         //查询库存
         List<QueryResourceParam> queryResourceParamList = updateResourceParamList.stream().map(updateResourceParam -> QueryResourceParam.builder().resourceId(updateResourceParam.getResourceId()).acquire(updateResourceParam.getNum()).build()).collect(Collectors.toList());
         try {
@@ -191,6 +190,7 @@ public class TestResourceUpdater extends BaseSpringTest {
             }
         } catch (Exception e) {
             System.out.println("查询可用库存失败了，errMsg:" + e.getMessage());
+            return;
         }
 
         try {

@@ -82,7 +82,11 @@ public class ResourceUpdater {
             throws LockWaitException, InterruptedException {
         List<UpdateResourceParam> updateResourceParamList = new ArrayList<>(1);
         updateResourceParamList.add(UpdateResourceParam.builder().resourceId(queryResourceParam.getResourceId()).build());
+        //检查可用资源信号量是否初始化 否则进行初始化
         CacheAccessor.checkAvailableSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
+        //检查是否存在不一致地可用资源Key
+        checkNotConsistenceAvailableResourceAndInit(updateResourceParamList);
+
         return CacheAccessor.queryAvailable(queryResourceParam);
     }
 
@@ -97,7 +101,10 @@ public class ResourceUpdater {
                 .stream()
                 .map(queryResourceParam -> UpdateResourceParam.builder().resourceId(queryResourceParam.getResourceId()).build())
                 .collect(Collectors.toList());
+        //检查可用资源信号量是否初始化 否则进行初始化
         CacheAccessor.checkAvailableSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
+        //检查是否存在不一致地可用资源Key
+        checkNotConsistenceAvailableResourceAndInit(updateResourceParamList);
 
         List<QueryResourceResult> resultList = new ArrayList<>();
         for(QueryResourceParam queryResourceParam : queryResourceParamList){
@@ -124,7 +131,9 @@ public class ResourceUpdater {
         //检查可用资源信号量是否初始化 否则进行初始化
         CacheAccessor.checkAvailableSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
         //检查是否存在不一致地可用资源Key
-        checkNotConsistenceAvailableResource(updateResourceParamList);
+        checkNotConsistenceAvailableResourceAndInit(updateResourceParamList);
+        //检查是否存在不一致地可用资源Key
+        checkNotConsistenceAvailableResourceAndInit(updateResourceParamList);
 
         //注册事务回滚之后钩子
         registerDbTransactionRollBackHock();
@@ -161,7 +170,7 @@ public class ResourceUpdater {
         //检查可用资源信号量是否初始化 否则进行初始化
         CacheAccessor.checkAvailableSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
         //检查是否存在不一致地可用资源Key
-        checkNotConsistenceAvailableResource(updateResourceParamList);
+        checkNotConsistenceAvailableResourceAndInit(updateResourceParamList);
 
         //注册事务回滚之后钩子
         registerDbTransactionRollBackHock();
@@ -289,7 +298,14 @@ public class ResourceUpdater {
         ReadWriteLock.clearThreadLocal();
     }
 
-    protected void checkNotConsistenceAvailableResource(List<UpdateResourceParam> updateResourceParamList) throws LockWaitException, InterruptedException, DataUnConsistentException {
+    /**
+     * 检查是否存在不一致地可用库存信号量，如果存在，尝试进行初始化
+     * @param updateResourceParamList
+     * @throws LockWaitException
+     * @throws InterruptedException
+     */
+    protected void checkNotConsistenceAvailableResourceAndInit(List<UpdateResourceParam> updateResourceParamList)
+            throws LockWaitException, InterruptedException {
         List<String> notConsistenceKeys = CacheAccessor.checkAvailableResourceConsistence(updateResourceParamList);
         if(Objects.nonNull(notConsistenceKeys)){
             //存在缓存数据库不一致的key
@@ -298,11 +314,18 @@ public class ResourceUpdater {
             ReadWriteLock.leaseHoldAvailableWriteLock();
             StringBuilder sb = new StringBuilder();
             notConsistenceKeys.forEach(key -> sb.append(key + ","));
-            throw new DataUnConsistentException("可用资源缓存与数据库存在不一致:" + sb + " 已进行重新初始化，等待下次使用");
+            log.info("可用资源缓存与数据库存在不一致:" + sb + " 已进行重新初始化");
         }
     }
 
-    protected void checkNotConsistencePreLockedResource(List<UpdateResourceParam> updateResourceParamList) throws LockWaitException, InterruptedException, DataUnConsistentException {
+    /**
+     * 检查是否存在不一致地预占库存信号量，如果存在，尝试进行初始化
+     * @param updateResourceParamList
+     * @throws LockWaitException
+     * @throws InterruptedException
+     */
+    protected void checkNotConsistencePreLockedResourceAndInit(List<UpdateResourceParam> updateResourceParamList)
+            throws LockWaitException, InterruptedException {
         List<String> notConsistenceKeys = CacheAccessor.checkPreLockedResourceConsistence(updateResourceParamList);
         if(Objects.nonNull(notConsistenceKeys)){
             //存在不一致的key
@@ -311,7 +334,7 @@ public class ResourceUpdater {
             ReadWriteLock.leaseHoldPreLockedWriteLock();
             StringBuilder sb = new StringBuilder();
             notConsistenceKeys.forEach(key -> sb.append(key + ","));
-            throw new DataUnConsistentException("预占资源缓存与数据库存在不一致:" + sb + " 已进行重新初始化，等待下次使用");
+            log.info("预占资源缓存与数据库存在不一致:" + sb + " 已进行重新初始化");
         }
     }
 }

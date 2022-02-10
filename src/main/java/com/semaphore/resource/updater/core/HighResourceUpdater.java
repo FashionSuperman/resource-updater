@@ -52,7 +52,11 @@ public class HighResourceUpdater extends ResourceUpdater{
             throws LockWaitException, InterruptedException {
         List<UpdateResourceParam> updateResourceParamList = new ArrayList<>(1);
         updateResourceParamList.add(UpdateResourceParam.builder().resourceId(queryResourceParam.getResourceId()).build());
+        //检查预占资源信号量是否初始化 否则进行初始化
         CacheAccessor.checkPreLockedSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
+        //检查是否存在不一致地预占资源Key
+        checkNotConsistencePreLockedResourceAndInit(updateResourceParamList);
+
         return CacheAccessor.queryPreLocked(queryResourceParam);
     }
 
@@ -67,7 +71,10 @@ public class HighResourceUpdater extends ResourceUpdater{
                 .stream()
                 .map(queryResourceParam -> UpdateResourceParam.builder().resourceId(queryResourceParam.getResourceId()).build())
                 .collect(Collectors.toList());
+        //检查预占资源信号量是否初始化 否则进行初始化
         CacheAccessor.checkPreLockedSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
+        //检查是否存在不一致地预占资源Key
+        checkNotConsistencePreLockedResourceAndInit(updateResourceParamList);
 
         List<QueryResourceResult> resultList = new ArrayList<>();
         for(QueryResourceParam queryResourceParam : queryResourceParamList){
@@ -98,9 +105,9 @@ public class HighResourceUpdater extends ResourceUpdater{
         //检查预占资源信号量是否初始化 否则进行初始化
         CacheAccessor.checkPreLockedSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
         //检查是否存在不一致地可用资源Key
-        checkNotConsistenceAvailableResource(updateResourceParamList);
+        checkNotConsistenceAvailableResourceAndInit(updateResourceParamList);
         //检查是否存在不一致地预占资源Key
-        checkNotConsistencePreLockedResource(updateResourceParamList);
+        checkNotConsistencePreLockedResourceAndInit(updateResourceParamList);
 
         //注册事务回滚之后钩子
         registerDbTransactionRollBackHock();
@@ -144,9 +151,9 @@ public class HighResourceUpdater extends ResourceUpdater{
         //检查预占资源信号量是否初始化 否则进行初始化
         CacheAccessor.checkPreLockedSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
         //检查是否存在不一致地可用资源Key
-        checkNotConsistenceAvailableResource(updateResourceParamList);
+        checkNotConsistenceAvailableResourceAndInit(updateResourceParamList);
         //检查是否存在不一致地预占资源Key
-        checkNotConsistencePreLockedResource(updateResourceParamList);
+        checkNotConsistencePreLockedResourceAndInit(updateResourceParamList);
 
         //注册事务回滚之后钩子
         registerDbTransactionRollBackHock();
@@ -181,7 +188,7 @@ public class HighResourceUpdater extends ResourceUpdater{
         //检查预占资源信号量是否初始化 否则进行初始化
         CacheAccessor.checkPreLockedSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
         //检查是否存在不一致地预占资源Key
-        checkNotConsistencePreLockedResource(updateResourceParamList);
+        checkNotConsistencePreLockedResourceAndInit(updateResourceParamList);
         //注册事务回滚之后钩子
         registerDbTransactionRollBackHock();
         //加读锁
