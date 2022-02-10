@@ -2,15 +2,18 @@ package com.semaphore.resource.updater;
 
 import com.google.common.collect.Lists;
 import com.semaphore.resource.updater.base.BaseSpringTest;
-import com.semaphore.resource.updater.core.UpdateResourceParam;
+import com.semaphore.resource.updater.core.*;
 import com.semaphore.resource.updater.bizService.MockBizService;
+import com.semaphore.resource.updater.exceptions.LockWaitException;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * 测试不支持预占的资源操作
@@ -31,6 +34,12 @@ public class TestResourceUpdater extends BaseSpringTest {
 
     @Resource
     private MockBizService mockBizService;
+
+    @Resource
+    @Qualifier("commonResourceUpdater")
+    private ResourceUpdater resourceUpdater;
+    @Resource
+    private HighResourceUpdater highResourceUpdater;
 
     @Test
     public void testSetAutoAdjustRate(){
@@ -170,6 +179,20 @@ public class TestResourceUpdater extends BaseSpringTest {
             UpdateResourceParam param = UpdateResourceParam.builder().resourceId(materialCode).num(acquireNum).build();
             updateResourceParamList.add(param);
         }
+        //查询库存
+        List<QueryResourceParam> queryResourceParamList = updateResourceParamList.stream().map(updateResourceParam -> QueryResourceParam.builder().resourceId(updateResourceParam.getResourceId()).acquire(updateResourceParam.getNum()).build()).collect(Collectors.toList());
+        try {
+            List<QueryResourceResult> resultList = resourceUpdater.queryAvailable(queryResourceParamList);
+            for(QueryResourceResult resourceResult : resultList){
+                if(!resourceResult.isFill()){
+                    System.out.println("资源:" + resourceResult.getResourceId() + " 要求: " + resourceResult.getAcquire() + " 剩余: " + resourceResult.getNum() + " 不满足要求");
+                    return;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("查询可用库存失败了，errMsg:" + e.getMessage());
+        }
+
         try {
             if(useMutexLock){
                 mockBizService.trySubtractResourceByMutexLock(updateResourceParamList);

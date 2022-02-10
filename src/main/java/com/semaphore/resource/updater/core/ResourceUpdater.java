@@ -78,8 +78,12 @@ public class ResourceUpdater {
      * @param queryResourceParam
      * @return
      */
-    public Integer queryAvailable(QueryResourceParam queryResourceParam){
-        return CacheAccessor.queryAvailable(queryResourceParam.getResourceId(),queryResourceParam.getAcquire());
+    public QueryResourceResult queryAvailable(QueryResourceParam queryResourceParam)
+            throws LockWaitException, InterruptedException {
+        List<UpdateResourceParam> updateResourceParamList = new ArrayList<>(1);
+        updateResourceParamList.add(UpdateResourceParam.builder().resourceId(queryResourceParam.getResourceId()).build());
+        CacheAccessor.checkAvailableSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
+        return CacheAccessor.queryAvailable(queryResourceParam);
     }
 
     /**
@@ -87,13 +91,20 @@ public class ResourceUpdater {
      * @param queryResourceParamList
      * @return
      */
-    public Map<String,Integer> queryAvailable(List<QueryResourceParam> queryResourceParamList){
-        Map<String,Integer> resultMap = new HashMap<>();
+    public List<QueryResourceResult> queryAvailable(List<QueryResourceParam> queryResourceParamList)
+            throws LockWaitException, InterruptedException {
+        List<UpdateResourceParam> updateResourceParamList = queryResourceParamList
+                .stream()
+                .map(queryResourceParam -> UpdateResourceParam.builder().resourceId(queryResourceParam.getResourceId()).build())
+                .collect(Collectors.toList());
+        CacheAccessor.checkAvailableSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
+
+        List<QueryResourceResult> resultList = new ArrayList<>();
         for(QueryResourceParam queryResourceParam : queryResourceParamList){
-            Integer num = queryAvailable(queryResourceParam);
-            resultMap.put(queryResourceParam.getResourceId(),num);
+            QueryResourceResult queryResourceResult = CacheAccessor.queryAvailable(queryResourceParam);
+            resultList.add(queryResourceResult);
         }
-        return resultMap;
+        return resultList;
     }
 
     /**

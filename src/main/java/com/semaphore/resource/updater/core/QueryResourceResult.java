@@ -15,21 +15,29 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class QueryResourceParam {
+public class QueryResourceResult {
+    private String resourceId;
     /**
-     * 需要的数量，用于自动调节一致性，如果缓存数量小于要求数量或者缓存数量为0都有概率进行自调节
+     * 要求的数量
      */
     private int acquire;
-    private String resourceId;
+    /**
+     * 实际数量（缓存）
+     */
+    private int num;
+    /**
+     * 是否满足acquire的要求
+     */
+    private boolean fill;
 
     @Override
     public boolean equals(Object obj) {
         if(Objects.isNull(obj)){
             return false;
         }
-        if(!(obj instanceof QueryResourceParam)){
+        if(!(obj instanceof QueryResourceResult)){
             return false;
         }
-        return ((QueryResourceParam)obj).getResourceId().equals(this.getResourceId());
+        return ((QueryResourceResult)obj).getResourceId().equals(this.getResourceId());
     }
 }

@@ -1,9 +1,6 @@
 package com.semaphore.resource.updater.cache;
 
-import com.semaphore.resource.updater.core.Const;
-import com.semaphore.resource.updater.core.ReadWriteLock;
-import com.semaphore.resource.updater.core.ResourcePermit;
-import com.semaphore.resource.updater.core.UpdateResourceParam;
+import com.semaphore.resource.updater.core.*;
 import com.semaphore.resource.updater.db.DbAccessor;
 import com.semaphore.resource.updater.exceptions.LockWaitException;
 import com.semaphore.resource.updater.exceptions.ResourceRunException;
@@ -114,23 +111,22 @@ public class CacheAccessor {
 
     /**
      * 查询可用资源数量
-     * @param resourceId
-     * @param acquire 需要的数量，用于自动调节一致性，如果缓存数量小于要求数量或者缓存数量为0都有概率进行自调节，可以传空，将不做任何操作
+     * @param queryResourceParam
      * @return
      */
-    public static Integer queryAvailable(String resourceId,Integer acquire){
+    public static QueryResourceResult queryAvailable(QueryResourceParam queryResourceParam){
+        String resourceId = queryResourceParam.getResourceId();
+        int acquire = queryResourceParam.getAcquire();
         MySemaphore mySemaphore = getResourceAvailableSemaphore(resourceId);
         if(!mySemaphore.isExists()){
             return null;
         }
         int availablePermit =  mySemaphore.availablePermits();
-        if(Objects.isNull(acquire)){
-            return availablePermit;
-        }
-        if(availablePermit == 0 || availablePermit < acquire){
+        boolean fill = availablePermit >= acquire;
+        if(availablePermit == 0 || !fill){
             adjustAvailableResource(resourceId);
         }
-        return availablePermit;
+        return QueryResourceResult.builder().resourceId(resourceId).acquire(acquire).num(availablePermit).fill(fill).build();
     }
 
     /**
@@ -320,23 +316,22 @@ public class CacheAccessor {
 
     /**
      * 查询预占资源数量
-     * @param resourceId
-     * @param acquire 需要的数量，用于自动调节一致性，如果缓存数量小于要求数量或者缓存数量为0都有概率进行自调节，可以传空，将不做任何操作
+     * @param queryResourceParam
      * @return
      */
-    public static Integer queryPreLocked(String resourceId,Integer acquire) {
+    public static QueryResourceResult queryPreLocked(QueryResourceParam queryResourceParam) {
+        String resourceId = queryResourceParam.getResourceId();
+        int acquire = queryResourceParam.getAcquire();
         MySemaphore mySemaphore = getResourcePreLockSemaphore(resourceId);
         if(!mySemaphore.isExists()){
             return null;
         }
         int preLockedPermit = mySemaphore.availablePermits();
-        if(Objects.isNull(acquire)){
-            return preLockedPermit;
-        }
-        if(preLockedPermit == 0 || preLockedPermit < acquire){
+        boolean fill = preLockedPermit >= acquire;
+        if(preLockedPermit == 0 || !fill){
             adjustPreLockedResource(resourceId);
         }
-        return preLockedPermit;
+        return QueryResourceResult.builder().resourceId(resourceId).acquire(acquire).num(preLockedPermit).fill(fill).build();
     }
 
     /**

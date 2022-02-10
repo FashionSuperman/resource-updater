@@ -48,8 +48,12 @@ public class HighResourceUpdater extends ResourceUpdater{
      * @param queryResourceParam
      * @return
      */
-    public Integer queryPreLocked(QueryResourceParam queryResourceParam){
-        return CacheAccessor.queryPreLocked(queryResourceParam.getResourceId(),queryResourceParam.getAcquire());
+    public QueryResourceResult queryPreLocked(QueryResourceParam queryResourceParam)
+            throws LockWaitException, InterruptedException {
+        List<UpdateResourceParam> updateResourceParamList = new ArrayList<>(1);
+        updateResourceParamList.add(UpdateResourceParam.builder().resourceId(queryResourceParam.getResourceId()).build());
+        CacheAccessor.checkPreLockedSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
+        return CacheAccessor.queryPreLocked(queryResourceParam);
     }
 
     /**
@@ -57,13 +61,20 @@ public class HighResourceUpdater extends ResourceUpdater{
      * @param queryResourceParamList
      * @return
      */
-    public Map<String,Integer> queryPreLocked(List<QueryResourceParam> queryResourceParamList){
-        Map<String,Integer> resultMap = new HashMap<>();
+    public List<QueryResourceResult> queryPreLocked(List<QueryResourceParam> queryResourceParamList)
+            throws LockWaitException, InterruptedException {
+        List<UpdateResourceParam> updateResourceParamList = queryResourceParamList
+                .stream()
+                .map(queryResourceParam -> UpdateResourceParam.builder().resourceId(queryResourceParam.getResourceId()).build())
+                .collect(Collectors.toList());
+        CacheAccessor.checkPreLockedSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
+
+        List<QueryResourceResult> resultList = new ArrayList<>();
         for(QueryResourceParam queryResourceParam : queryResourceParamList){
-            Integer num = queryPreLocked(queryResourceParam);
-            resultMap.put(queryResourceParam.getResourceId(),num);
+            QueryResourceResult queryResourceResult = queryPreLocked(queryResourceParam);
+            resultList.add(queryResourceResult);
         }
-        return resultMap;
+        return resultList;
     }
 
     /**
