@@ -33,7 +33,7 @@ resource_auto_adjust_rate可以设置为 0-10 之间的整数 设置为0 表示�
 <dependency>
     <groupId>io.github.fashionsuperman</groupId>
     <artifactId>resource-updater</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 ```
 ## 配置组件
