@@ -132,8 +132,6 @@ public class ResourceUpdater {
         CacheAccessor.checkAvailableSemaphoreInitializedOrInit(updateResourceParamList,dbAccessor);
         //检查是否存在不一致地可用资源Key
         checkNotConsistenceAvailableResourceAndInit(updateResourceParamList);
-        //检查是否存在不一致地可用资源Key
-        checkNotConsistenceAvailableResourceAndInit(updateResourceParamList);
 
         //注册事务回滚之后钩子
         registerDbTransactionRollBackHock();
